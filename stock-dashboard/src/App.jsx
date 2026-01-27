@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import StockChart from './components/StockChart'
 import OrderBook from './components/OrderBook'
 import DailyLimitUp from './components/DailyLimitUp'
+import StockSearch from './components/StockSearch'
 import wsClient from './utils/websocketClient'
 
 function App() {
@@ -131,6 +132,8 @@ function App() {
           {stockData.change >= 0 ? '▲' : '▼'} {Math.abs(stockData.change).toLocaleString()}원 ({stockData.change >= 0 ? '+' : ''}{stockData.changePercent}%)
         </div>
       </div>
+
+      <StockSearch />
 
       <div className="grid">
         <StockChart price={stockData.price} />
