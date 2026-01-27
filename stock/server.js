@@ -1,9 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import apiRoutes from './api/routes.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -15,14 +20,12 @@ app.use(express.json());
 // API Routes
 app.use('/api', apiRoutes);
 
-// 기본 라우트
-app.get('/', (req, res) => {
-  res.json({ message: 'API Server Running', status: 'ok', timestamp: new Date() });
-});
+// Serve static files from dashboard dist
+app.use(express.static(path.join(__dirname, '../stock-dashboard/dist')));
 
-// 404 핸들러
+// SPA fallback - all non-API routes return index.html
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
+  res.sendFile(path.join(__dirname, '../stock-dashboard/dist/index.html'));
 });
 
 // 서버 시작
