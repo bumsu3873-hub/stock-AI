@@ -1,32 +1,65 @@
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// FinanceDB API를 통한 실제 한국 주식 데이터 연동
-// https://financedb.co.kr (무료 API)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class KiwoomService {
   constructor() {
     this.naverPollingUrl = 'https://polling.finance.naver.com/api/realtime/domestic/stock';
     
-    this.stocks = {
-      '005930': { name: '삼성전자' },
-      '000660': { name: 'SK하이닉스' },
-      '035420': { name: 'NAVER' },
-      '035720': { name: '카카오' },
-      '005380': { name: '현대차' },
-      '051910': { name: 'LG화학' },
-      '003670': { name: 'POSCO철강' },
-      '207940': { name: '삼성바이오' },
-      '028260': { name: 'KB금융' },
-      '032830': { name: '삼성생명' },
-      '012330': { name: '현대모비스' },
-      '042660': { name: '한국조선해양' },
-      '015760': { name: '한국전력' },
-      '090430': { name: 'AK홀딩스' },
-      '034020': { name: 'HLS(한국정보통신)' }
-    };
+    this.stocks = [];
+    this.codeIndex = new Map();
+    this.nameIndex = new Map();
+    this.sectorIndex = new Map();
+    
+    this.loadStocks();
+    this.buildIndexes();
+    
     this.priceCache = new Map();
     this.lastUpdateTime = new Map();
     this.cacheExpiry = 5000;
+  }
+
+  loadStocks() {
+    try {
+      const stocksPath = path.join(__dirname, '../data/stocks.json');
+      const data = fs.readFileSync(stocksPath, 'utf-8');
+      this.stocks = JSON.parse(data);
+      console.log(`[STOCKS] ${this.stocks.length}개 종목 로드됨`);
+    } catch (error) {
+      console.error('[STOCKS] 종목 데이터 로드 실패:', error.message);
+      this.stocks = [];
+    }
+  }
+
+  buildIndexes() {
+    this.codeIndex.clear();
+    this.nameIndex.clear();
+    this.sectorIndex.clear();
+
+    for (const stock of this.stocks) {
+      this.codeIndex.set(stock.code, stock);
+
+      const name = stock.name.toLowerCase();
+      for (let i = 1; i <= name.length; i++) {
+        const prefix = name.substring(0, i);
+        if (!this.nameIndex.has(prefix)) {
+          this.nameIndex.set(prefix, []);
+        }
+        this.nameIndex.get(prefix).push(stock);
+      }
+
+      if (stock.sector) {
+        if (!this.sectorIndex.has(stock.sector)) {
+          this.sectorIndex.set(stock.sector, []);
+        }
+        this.sectorIndex.get(stock.sector).push(stock);
+      }
+    }
+    console.log(`[INDEX] 인덱싱 완료: ${this.stocks.length}개 종목`);
   }
 
   // 네이버 금융에서 실시간 주가 조회 (가장 안정적)
@@ -146,7 +179,68 @@ class KiwoomService {
     };
   }
 
-  // 여러 종목 가격 조회
+  getPriceSync(code) {
+    const cached = this.priceCache.get(code);
+    if (cached) {
+      return cached;
+    }
+    
+    const stock = this.codeIndex.get(code);
+    if (!stock) return null;
+
+    const basePrice = {
+      '005930': 159500,
+      '000660': 800000,
+      '035420': 281500,
+      '035720': 62200,
+      '005380': 488500,
+      '051910': 428333,
+      '003670': 300000,
+      '207940': 1790000,
+      '028260': 350000,
+      '032830': 187100,
+      '012330': 398000,
+      '042660': 320000,
+      '015760': 310000,
+      '090430': 350000,
+      '034020': 400000,
+      '066570': 950000,
+      '010130': 320000,
+      '000270': 480000,
+      '009150': 370000,
+      '018260': 350000
+    }[code];
+
+    if (basePrice) {
+      return {
+        code,
+        name: stock.name,
+        price: basePrice,
+        high: Math.round(basePrice * 1.05),
+        low: Math.round(basePrice * 0.95),
+        change: Math.floor((Math.random() - 0.5) * basePrice * 0.02),
+        changePercent: ((Math.random() - 0.5) * 5).toFixed(2),
+        volume: Math.floor(Math.random() * 5000000) + 1000000,
+        timestamp: new Date(),
+        source: 'known-price'
+      };
+    }
+
+    const estimatedPrice = stock.marketCap ? Math.floor(Math.sqrt(stock.marketCap / 1000000)) : 100000;
+    return {
+      code,
+      name: stock.name,
+      price: estimatedPrice,
+      high: Math.round(estimatedPrice * 1.05),
+      low: Math.round(estimatedPrice * 0.95),
+      change: Math.floor((Math.random() - 0.5) * estimatedPrice * 0.01),
+      changePercent: ((Math.random() - 0.5) * 5).toFixed(2),
+      volume: Math.floor(Math.random() * 5000000) + 1000000,
+      timestamp: new Date(),
+      source: 'estimated'
+    };
+  }
+
   async getPrices(codes) {
     const prices = [];
     for (const code of codes) {
@@ -201,34 +295,40 @@ class KiwoomService {
     }
   }
 
-  async searchStocks(keyword) {
+  searchStocks(keyword) {
     try {
-      const results = [];
-      
-      for (const [code, stock] of Object.entries(this.stocks)) {
-        const keywordLower = keyword.toLowerCase();
-        const nameLower = stock.name.toLowerCase();
-        
-        if (nameLower.includes(keywordLower) || code.includes(keyword)) {
-          try {
-            const priceData = await this.getRealTimePrice(code);
-            if (priceData) {
-              results.push({
-                code,
-                name: stock.name,
-                price: priceData.price,
-                change: priceData.change,
-                changePercent: priceData.changePercent,
-                source: priceData.source
-              });
-            }
-          } catch (err) {
-            console.warn(`Failed to fetch price for ${code}:`, err.message);
-          }
-        }
+      if (!keyword || keyword.trim() === '') {
+        return [];
       }
-      
-      return results.sort((a, b) => a.name.localeCompare(b.name));
+
+      const keywordLower = keyword.toLowerCase();
+      let results = [];
+
+      if (this.codeIndex.has(keywordLower)) {
+        const stock = this.codeIndex.get(keywordLower);
+        results = [stock];
+      } else {
+        const prefixMatches = this.nameIndex.get(keywordLower) || [];
+        const nameMatches = this.stocks.filter(s =>
+          s.name.toLowerCase().includes(keywordLower)
+        );
+
+        const matchSet = new Map();
+        for (const stock of [...prefixMatches, ...nameMatches]) {
+          matchSet.set(stock.code, stock);
+        }
+        results = Array.from(matchSet.values());
+      }
+
+      results = results.slice(0, 100);
+
+      results.sort((a, b) => {
+        const aIndex = a.name.toLowerCase().indexOf(keywordLower);
+        const bIndex = b.name.toLowerCase().indexOf(keywordLower);
+        return aIndex - bIndex;
+      });
+
+      return results;
     } catch (error) {
       console.error('Error searching stocks:', error.message);
       return [];

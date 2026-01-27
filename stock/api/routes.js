@@ -22,8 +22,28 @@ router.get('/stocks/search', async (req, res) => {
     return res.status(400).json({ error: 'name parameter required' });
   }
   try {
-    const results = await kiwoomService.searchStocks(name);
+    const stocks = kiwoomService.searchStocks(name);
+    
+    const results = stocks.map((stock) => {
+      const priceData = kiwoomService.getPriceSync(stock.code);
+      return {
+        code: stock.code,
+        name: stock.name,
+        market: stock.market,
+        sector: stock.sector,
+        price: priceData?.price || 0,
+        change: priceData?.change || 0,
+        changePercent: priceData?.changePercent || '0.00',
+        source: priceData?.source || 'unknown'
+      };
+    });
+
     res.json({ name, results, count: results.length });
+    
+    // 백그라운드에서 가격 미리 업데이트
+    stocks.slice(0, 10).forEach((stock) => {
+      kiwoomService.getRealTimePrice(stock.code).catch(() => {});
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
