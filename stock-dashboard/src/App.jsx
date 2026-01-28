@@ -3,7 +3,11 @@ import StockChart from './components/StockChart'
 import OrderBook from './components/OrderBook'
 import DailyLimitUp from './components/DailyLimitUp'
 import StockSearch from './components/StockSearch'
+import Portfolio from './components/Portfolio'
 import wsClient from './utils/websocketClient'
+import storageService from './utils/storageService'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 function App() {
   const [stockData, setStockData] = useState({
@@ -15,6 +19,11 @@ function App() {
   })
   const [wsStatus, setWsStatus] = useState('연결 중...')
   const [selectedStock, setSelectedStock] = useState('005930')
+  
+  const [portfolio, setPortfolio] = useState([])
+  const [balance, setBalance] = useState(0)
+  const [currentPrices, setCurrentPrices] = useState({})
+  const [loading, setLoading] = useState(true)
 
   const stocks = [
     { code: '005930', name: '삼성전자' },
@@ -23,6 +32,45 @@ function App() {
     { code: '035720', name: '카카오' },
     { code: '005380', name: '현대차' }
   ]
+
+  useEffect(() => {
+    loadPortfolioData()
+  }, [])
+
+  const loadPortfolioData = async () => {
+    try {
+      setLoading(true)
+      const [portfolioRes, balanceRes] = await Promise.all([
+        fetch(`${API_URL}/api/portfolio`),
+        fetch(`${API_URL}/api/balance`)
+      ])
+
+      if (portfolioRes.ok && balanceRes.ok) {
+        const portfolioData = await portfolioRes.json()
+        const balanceData = await balanceRes.json()
+        
+        setPortfolio(portfolioData.holdings || [])
+        setBalance(balanceData.balance)
+        
+        const pricesMap = {}
+        portfolioData.holdings?.forEach(holding => {
+          pricesMap[holding.code] = holding.avgPrice
+        })
+        setCurrentPrices(pricesMap)
+        
+        storageService.savePortfolio(portfolioData)
+        storageService.saveBalance(balanceData)
+      }
+    } catch (error) {
+      console.error('포트폴리오 로드 실패:', error)
+      const backup = storageService.getPortfolio()
+      if (backup) {
+        setPortfolio(backup.holdings || [])
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     const initializeWebSocket = async () => {
@@ -40,6 +88,12 @@ function App() {
     const handlePriceUpdate = (prices) => {
       if (!prices || prices.length === 0) return
 
+      const pricesMap = {}
+      prices.forEach(p => {
+        pricesMap[p.code] = p.price
+      })
+      setCurrentPrices(prev => ({ ...prev, ...pricesMap }))
+
       const selectedStockData = prices.find(p => p.code === selectedStock)
       if (selectedStockData) {
         setStockData({
@@ -53,7 +107,6 @@ function App() {
     }
 
     initializeWebSocket()
-
     wsClient.on('priceUpdate', handlePriceUpdate)
 
     return () => {
@@ -84,6 +137,10 @@ function App() {
     if (wsClient.isConnected()) {
       wsClient.subscribe([code])
     }
+  }
+
+  const handleOrderComplete = (order) => {
+    loadPortfolioData()
   }
 
   return (
@@ -133,11 +190,32 @@ function App() {
         </div>
       </div>
 
+      <div style={{ 
+        marginBottom: '20px', 
+        padding: '20px', 
+        background: '#1a1f3a', 
+        borderRadius: '10px',
+        color: '#fff'
+      }}>
+        <h3>💰 계좌 현황</h3>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '10px', color: '#4a90e2' }}>
+          잔액: {balance.toLocaleString()}원
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
+      ) : (
+        <div style={{ marginBottom: '20px' }}>
+          <Portfolio portfolio={portfolio} currentPrices={currentPrices} />
+        </div>
+      )}
+
       <StockSearch />
 
       <div className="grid">
         <StockChart price={stockData.price} />
-        <OrderBook currentPrice={stockData.price} />
+        <OrderBook currentPrice={stockData.price} onOrderComplete={handleOrderComplete} />
         <DailyLimitUp />
       </div>
     </div>
