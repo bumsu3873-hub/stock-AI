@@ -44,11 +44,13 @@ function MainContent({ selectedStock, sectorStocks }) {
     return <div style={{ padding: '20px' }}>로딩 중...</div>
   }
 
+  const isMobile = window.innerWidth < 768
+
   return (
     <div style={{
       flex: 1,
-      overflow: 'y',
-      padding: '30px',
+      overflow: 'auto',
+      padding: isMobile ? '15px' : '30px',
       background: '#0f1419'
     }}>
       <div style={{ marginBottom: '30px' }}>
@@ -109,7 +111,7 @@ function MainContent({ selectedStock, sectorStocks }) {
 
        <div style={{
          display: 'grid',
-         gridTemplateColumns: 'repeat(4, 1fr)',
+         gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
          gap: '15px',
          marginBottom: '30px'
        }}>
@@ -179,11 +181,11 @@ function MainContent({ selectedStock, sectorStocks }) {
          <StockChart price={stockData.price} />
        </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '15px'
-      }}>
+       <div style={{
+         display: 'grid',
+         gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+         gap: '15px'
+       }}>
         <div style={{
           padding: '20px',
           background: '#14181f',

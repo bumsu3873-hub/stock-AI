@@ -4,6 +4,7 @@ import LeftSidebar from '../components/LeftSidebar'
 import MainContent from '../components/MainContent'
 import RightPanel from '../components/RightPanel'
 import Portfolio from '../components/Portfolio'
+import AdvancedAnalysis from './AdvancedAnalysis'
 
 function Dashboard() {
   const [selectedSector, setSelectedSector] = useState('IT')
@@ -12,6 +13,7 @@ function Dashboard() {
   const [sectorStocks, setSectorStocks] = useState([])
   const [portfolio, setPortfolio] = useState([])
   const [showPortfolio, setShowPortfolio] = useState(false)
+  const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false)
 
   useEffect(() => {
     const fetchIndices = async () => {
@@ -59,6 +61,8 @@ function Dashboard() {
     return () => clearInterval(interval)
   }, [])
 
+  const isMobile = window.innerWidth < 768
+
   return (
     <div style={{
       display: 'flex',
@@ -66,7 +70,8 @@ function Dashboard() {
       height: '100vh',
       background: '#0f1419',
       color: '#fff',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto',
+      overflow: 'hidden'
     }}>
       <Header indices={indices} />
       
@@ -78,25 +83,51 @@ function Dashboard() {
         borderBottom: '1px solid #1e2330'
       }}>
         <div></div>
-        <button
-          onClick={() => setShowPortfolio(!showPortfolio)}
-          style={{
-            padding: '8px 16px',
-            background: showPortfolio ? '#1e90ff' : 'transparent',
-            color: '#fff',
-            border: showPortfolio ? 'none' : '1px solid #1e2330',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            transition: 'all 0.2s'
-          }}
-        >
-          💼 포트폴리오
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={() => {
+              setShowAdvancedAnalysis(!showAdvancedAnalysis)
+              setShowPortfolio(false)
+            }}
+            style={{
+              padding: '8px 16px',
+              background: showAdvancedAnalysis ? '#1e90ff' : 'transparent',
+              color: '#fff',
+              border: showAdvancedAnalysis ? 'none' : '1px solid #1e2330',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s'
+            }}
+          >
+            📊 고급 분석
+          </button>
+          <button
+            onClick={() => {
+              setShowPortfolio(!showPortfolio)
+              setShowAdvancedAnalysis(false)
+            }}
+            style={{
+              padding: '8px 16px',
+              background: showPortfolio ? '#1e90ff' : 'transparent',
+              color: '#fff',
+              border: showPortfolio ? 'none' : '1px solid #1e2330',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s'
+            }}
+          >
+            💼 포트폴리오
+          </button>
+        </div>
       </div>
       
-      {showPortfolio ? (
+      {showAdvancedAnalysis ? (
+        <AdvancedAnalysis selectedStock={selectedStock} />
+      ) : showPortfolio ? (
         <div style={{
           flex: 1,
           overflow: 'auto',
@@ -108,23 +139,32 @@ function Dashboard() {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          <LeftSidebar 
-            selectedSector={selectedSector}
-            onSectorChange={setSelectedSector}
-            sectorStocks={sectorStocks}
-            onStockSelect={setSelectedStock}
-          />
+        <div style={{
+          display: 'flex',
+          flex: 1,
+          overflow: 'hidden',
+          flexDirection: isMobile ? 'column' : 'row'
+        }}>
+          {!isMobile && (
+            <LeftSidebar 
+              selectedSector={selectedSector}
+              onSectorChange={setSelectedSector}
+              sectorStocks={sectorStocks}
+              onStockSelect={setSelectedStock}
+            />
+          )}
           
           <MainContent 
             selectedStock={selectedStock}
             sectorStocks={sectorStocks}
           />
           
-          <RightPanel 
-            selectedStock={selectedStock}
-            sectorStocks={sectorStocks}
-          />
+          {!isMobile && (
+            <RightPanel 
+              selectedStock={selectedStock}
+              sectorStocks={sectorStocks}
+            />
+          )}
         </div>
       )}
     </div>
