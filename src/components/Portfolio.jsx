@@ -1,74 +1,152 @@
-import React from 'react';
-
-const Portfolio = ({ portfolio, currentPrices }) => {
-  const totalValue = portfolio.reduce((acc, item) => {
-    const currentPrice = currentPrices[item.id] || item.avgPrice;
-    return acc + (currentPrice * item.amount);
-  }, 0);
-
-  const totalCost = portfolio.reduce((acc, item) => acc + (item.avgPrice * item.amount), 0);
-  const totalProfit = totalValue - totalCost;
-  const totalProfitRate = (totalProfit / totalCost) * 100;
-
-  return (
-    <div className="w-full bg-panel rounded-lg border border-border flex flex-col h-full">
-      <div className="p-3 border-b border-border flex justify-between items-center">
-        <h2 className="text-lg font-bold text-slate-200">내 계좌</h2>
-        <div className="text-right">
-          <div className="text-xs text-slate-400">총 평가금액</div>
-          <div className="font-mono font-bold text-slate-100">{totalValue.toLocaleString()}원</div>
+function Portfolio({ portfolio }) {
+  if (!portfolio || portfolio.length === 0) {
+    return (
+      <div style={{ padding: '20px', background: '#1a1f3a', borderRadius: '10px', marginTop: '20px' }}>
+        <h2>📊 포트폴리오</h2>
+        <div style={{ textAlign: 'center', opacity: 0.7, paddingTop: '20px' }}>
+          보유 중인 주식이 없습니다.
         </div>
       </div>
-      
-      <div className="p-3 bg-slate-800/30 border-b border-border flex justify-between items-center text-sm">
-        <span className="text-slate-400">총 손익</span>
-        <span className={`font-mono font-bold ${totalProfit > 0 ? 'text-up' : 'text-down'}`}>
-          {totalProfit > 0 ? '+' : ''}{totalProfit.toLocaleString()} ({totalProfitRate.toFixed(2)}%)
-        </span>
+    )
+  }
+
+  let totalInvestment = 0
+  let totalCurrentValue = 0
+
+  const holdings = portfolio
+    .filter(item => item.hldg_qty && parseInt(item.hldg_qty) > 0)
+    .map(item => {
+      const avgPrice = parseFloat(item.pchs_avg_pric)
+      const currentPrice = parseFloat(item.prpr)
+      const quantity = parseInt(item.hldg_qty)
+      const investmentValue = avgPrice * quantity
+      const currentValue = currentPrice * quantity
+      const gainLoss = currentValue - investmentValue
+      const gainLossPercent = investmentValue > 0 ? (gainLoss / investmentValue * 100).toFixed(2) : 0
+
+      totalInvestment += investmentValue
+      totalCurrentValue += currentValue
+
+      return {
+        code: item.pdno,
+        name: item.prdt_name,
+        quantity,
+        avgPrice,
+        currentPrice,
+        investmentValue,
+        currentValue,
+        gainLoss,
+        gainLossPercent
+      }
+    })
+
+  const totalGainLoss = totalCurrentValue - totalInvestment
+  const totalGainLossPercent = totalInvestment > 0 ? (totalGainLoss / totalInvestment * 100).toFixed(2) : 0
+
+  return (
+    <div style={{ padding: '20px', background: '#1a1f3a', borderRadius: '10px', marginTop: '20px' }}>
+      <h2>📊 포트폴리오</h2>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '15px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ padding: '15px', background: '#2a2f4a', borderRadius: '5px' }}>
+          <div style={{ fontSize: '12px', opacity: 0.7 }}>총 투자액</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '5px' }}>
+            {totalInvestment.toLocaleString()}원
+          </div>
+        </div>
+        <div style={{ padding: '15px', background: '#2a2f4a', borderRadius: '5px' }}>
+          <div style={{ fontSize: '12px', opacity: 0.7 }}>현재 평가액</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '5px' }}>
+            {totalCurrentValue.toLocaleString()}원
+          </div>
+        </div>
+        <div style={{
+          padding: '15px',
+          background: '#2a2f4a',
+          borderRadius: '5px'
+        }}>
+          <div style={{ fontSize: '12px', opacity: 0.7 }}>손익</div>
+          <div style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            marginTop: '5px',
+            color: totalGainLoss >= 0 ? '#ff6b6b' : '#4a90e2'
+          }}>
+            {totalGainLoss >= 0 ? '+' : ''}{totalGainLoss.toLocaleString()}원
+          </div>
+          <div style={{
+            fontSize: '12px',
+            marginTop: '5px',
+            color: totalGainLoss >= 0 ? '#ff6b6b' : '#4a90e2'
+          }}>
+            {totalGainLossPercent >= 0 ? '+' : ''}{totalGainLossPercent}%
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-slate-400 bg-slate-800/50 sticky top-0">
-            <tr>
-              <th className="px-4 py-2">종목</th>
-              <th className="px-4 py-2 text-right">보유수량</th>
-              <th className="px-4 py-2 text-right">평가손익</th>
-              <th className="px-4 py-2 text-right">수익률</th>
-            </tr>
-          </thead>
-          <tbody>
-            {portfolio.map((item) => {
-              const currentPrice = currentPrices[item.id] || item.avgPrice;
-              const valuation = currentPrice * item.amount;
-              const cost = item.avgPrice * item.amount;
-              const profit = valuation - cost;
-              const profitRate = (profit / cost) * 100;
-              const isUp = profit > 0;
-
-              return (
-                <tr key={item.id} className="border-b border-slate-800 hover:bg-slate-700/30">
-                  <td className="px-4 py-3 font-medium text-slate-200">
-                    {item.name}
-                    <span className="block text-xs text-slate-500">{item.avgPrice.toLocaleString()}</span>
+      {holdings.length > 0 && (
+        <div style={{
+          overflowX: 'auto',
+          marginTop: '20px'
+        }}>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '12px'
+          }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #2a2f4a' }}>
+                <th style={{ padding: '10px', textAlign: 'left', opacity: 0.7 }}>종목</th>
+                <th style={{ padding: '10px', textAlign: 'right', opacity: 0.7 }}>보유수량</th>
+                <th style={{ padding: '10px', textAlign: 'right', opacity: 0.7 }}>평균가</th>
+                <th style={{ padding: '10px', textAlign: 'right', opacity: 0.7 }}>현재가</th>
+                <th style={{ padding: '10px', textAlign: 'right', opacity: 0.7 }}>평가액</th>
+                <th style={{ padding: '10px', textAlign: 'right', opacity: 0.7 }}>손익</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holdings.map(holding => (
+                <tr key={holding.code} style={{ borderBottom: '1px solid #2a2f4a' }}>
+                  <td style={{ padding: '10px' }}>
+                    <div style={{ fontWeight: 'bold' }}>{holding.name}</div>
+                    <div style={{ opacity: 0.7, fontSize: '11px' }}>{holding.code}</div>
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-300">
-                    {item.amount}주
+                  <td style={{ padding: '10px', textAlign: 'right' }}>
+                    {holding.quantity.toLocaleString()}주
                   </td>
-                  <td className={`px-4 py-3 text-right font-mono ${isUp ? 'text-up' : 'text-down'}`}>
-                    {profit > 0 ? '+' : ''}{profit.toLocaleString()}
+                  <td style={{ padding: '10px', textAlign: 'right' }}>
+                    {holding.avgPrice.toLocaleString()}원
                   </td>
-                  <td className={`px-4 py-3 text-right font-mono ${isUp ? 'text-up' : 'text-down'}`}>
-                    {profitRate.toFixed(2)}%
+                  <td style={{ padding: '10px', textAlign: 'right', color: '#4a90e2' }}>
+                    {holding.currentPrice.toLocaleString()}원
+                  </td>
+                  <td style={{ padding: '10px', textAlign: 'right' }}>
+                    {holding.currentValue.toLocaleString()}원
+                  </td>
+                  <td style={{
+                    padding: '10px',
+                    textAlign: 'right',
+                    color: holding.gainLoss >= 0 ? '#ff6b6b' : '#4a90e2',
+                    fontWeight: 'bold'
+                  }}>
+                    <div>{holding.gainLoss >= 0 ? '+' : ''}{holding.gainLoss.toLocaleString()}원</div>
+                    <div style={{ fontSize: '11px' }}>
+                      {holding.gainLossPercent >= 0 ? '+' : ''}{holding.gainLossPercent}%
+                    </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
-  );
-};
+  )
+}
 
-export default Portfolio;
+export default Portfolio

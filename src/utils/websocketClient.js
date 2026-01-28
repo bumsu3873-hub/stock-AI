@@ -1,5 +1,5 @@
 class WebSocketClient {
-  constructor(url = 'ws://localhost:8080') {
+  constructor(url = 'ws://localhost:3000/ws') {
     this.url = url;
     this.ws = null;
     this.reconnectAttempts = 0;
@@ -68,8 +68,10 @@ class WebSocketClient {
     
     this.send({
       type: 'SUBSCRIBE',
-      codes
+      codes: codes
     });
+
+    console.log(`[WS] Subscribed to: ${codes.join(', ')}`);
   }
 
   unsubscribe(codes) {
