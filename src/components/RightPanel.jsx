@@ -68,18 +68,18 @@ function RightPanel({ selectedStock, sectorStocks }) {
               <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{stock.name}</span>
               <span style={{ fontSize: '10px', opacity: 0.7 }}>{stock.code}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                {stock.price.toLocaleString()}원
-              </span>
-              <span style={{
-                fontSize: '11px',
-                color: stock.change >= 0 ? '#ff4757' : '#1e90ff',
-                fontWeight: 'bold'
-              }}>
-                {stock.change >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent)}%
-              </span>
-            </div>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                 {stock.price.toLocaleString()}원
+               </span>
+               <span style={{
+                 fontSize: '11px',
+                 color: stock.change >= 0 ? '#ff4757' : '#1e90ff',
+                 fontWeight: 'bold'
+               }}>
+                 {stock.change >= 0 ? '▲' : '▼'} {Math.abs(parseFloat(stock.changePercent))}%
+               </span>
+             </div>
           </div>
         ))}
       </div>

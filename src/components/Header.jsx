@@ -1,4 +1,27 @@
-function Header({ indices }) {
+function Header({ indices = [] }) {
+  if (!indices || indices.length === 0) {
+    return (
+      <div style={{
+        padding: '20px 30px',
+        borderBottom: '1px solid #1e2330',
+        background: '#0a0e14'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+            📈 StockDashboard
+          </h1>
+          <div style={{ fontSize: '12px', opacity: 0.7 }}>
+            {new Date().toLocaleString('ko-KR')}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       padding: '20px 30px',
@@ -22,18 +45,22 @@ function Header({ indices }) {
       <div style={{
         display: 'flex',
         gap: '30px',
-        overflow: 'x'
+        overflowX: 'auto'
       }}>
         {indices.map(index => (
           <div key={index.code} style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '10px',
+            minWidth: 'max-content'
           }}>
             <div>
               <div style={{ fontSize: '12px', opacity: 0.7 }}>{index.name}</div>
               <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                {index.price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}
+                {typeof index.price === 'number' 
+                  ? index.price.toLocaleString('ko-KR', { maximumFractionDigits: 2 })
+                  : '0'
+                }
               </div>
             </div>
             <div style={{
@@ -42,7 +69,7 @@ function Header({ indices }) {
             }}>
               <div>{index.change >= 0 ? '▲' : '▼'} {Math.abs(index.change).toFixed(2)}</div>
               <div style={{ fontSize: '12px' }}>
-                {index.changePercent > 0 ? '+' : ''}{index.changePercent}%
+                {parseFloat(index.changePercent) > 0 ? '+' : ''}{index.changePercent}%
               </div>
             </div>
           </div>

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import StockChart from './StockChart'
+import OrderModal from './OrderModal'
 
 function MainContent({ selectedStock, sectorStocks }) {
   const [stockData, setStockData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showOrderModal, setShowOrderModal] = useState(false)
+  const [orderType, setOrderType] = useState('buy')
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -57,12 +60,59 @@ function MainContent({ selectedStock, sectorStocks }) {
         </p>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '15px',
-        marginBottom: '30px'
-      }}>
+       <div style={{
+         display: 'flex',
+         gap: '10px',
+         marginBottom: '20px'
+       }}>
+         <button
+           onClick={() => {
+             setOrderType('buy')
+             setShowOrderModal(true)
+           }}
+           style={{
+             flex: 1,
+             padding: '12px 20px',
+             background: '#ff4757',
+             color: '#fff',
+             border: 'none',
+             borderRadius: '8px',
+             fontSize: '14px',
+             fontWeight: 'bold',
+             cursor: 'pointer',
+             transition: 'all 0.2s'
+           }}
+         >
+           📈 매수
+         </button>
+         <button
+           onClick={() => {
+             setOrderType('sell')
+             setShowOrderModal(true)
+           }}
+           style={{
+             flex: 1,
+             padding: '12px 20px',
+             background: '#1e90ff',
+             color: '#fff',
+             border: 'none',
+             borderRadius: '8px',
+             fontSize: '14px',
+             fontWeight: 'bold',
+             cursor: 'pointer',
+             transition: 'all 0.2s'
+           }}
+         >
+           📉 매도
+         </button>
+       </div>
+
+       <div style={{
+         display: 'grid',
+         gridTemplateColumns: 'repeat(4, 1fr)',
+         gap: '15px',
+         marginBottom: '30px'
+       }}>
         <div style={{
           padding: '20px',
           background: '#14181f',
@@ -119,15 +169,15 @@ function MainContent({ selectedStock, sectorStocks }) {
         </div>
       </div>
 
-      <div style={{
-        padding: '20px',
-        background: '#14181f',
-        borderRadius: '8px',
-        marginBottom: '30px'
-      }}>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: '14px' }}>📈 차트</h3>
-        <StockChart stockCode={selectedStock} />
-      </div>
+       <div style={{
+         padding: '20px',
+         background: '#14181f',
+         borderRadius: '8px',
+         marginBottom: '30px'
+       }}>
+         <h3 style={{ margin: '0 0 20px 0', fontSize: '14px' }}>📈 차트</h3>
+         <StockChart price={stockData.price} />
+       </div>
 
       <div style={{
         display: 'grid',
@@ -164,11 +214,23 @@ function MainContent({ selectedStock, sectorStocks }) {
           <h4 style={{ margin: '0 0 15px 0', fontSize: '13px', opacity: 0.7 }}>오늘 시가</h4>
           <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
             {stockData.open.toLocaleString()}원
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+           </div>
+         </div>
+       </div>
+
+       {showOrderModal && (
+         <OrderModal
+           stock={stockData}
+           orderType={orderType}
+           onClose={() => setShowOrderModal(false)}
+           onSuccess={() => {
+             setShowOrderModal(false)
+             alert(`${orderType === 'buy' ? '매수' : '매도'} 주문이 완료되었습니다!`)
+           }}
+         />
+       )}
+     </div>
+   )
 }
 
 export default MainContent

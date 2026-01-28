@@ -66,7 +66,7 @@ function LeftSidebar({ selectedSector, onSectorChange, sectorStocks, onStockSele
                 fontSize: '11px',
                 color: stock.change >= 0 ? '#ff4757' : '#1e90ff'
               }}>
-                {stock.change >= 0 ? '▲' : '▼'} {Math.abs(stock.changePercent)}%
+                {stock.change >= 0 ? '▲' : '▼'} {Math.abs(parseFloat(stock.changePercent))}%
               </span>
             </div>
           </div>

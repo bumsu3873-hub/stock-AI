@@ -320,6 +320,30 @@ const POPULAR_STOCKS = [
   { code: '207940', name: '삼성바이오로직스' }
 ];
 
+const STOCK_NAMES = {
+  '005930': '삼성전자',
+  '000660': 'SK하이닉스',
+  '035420': 'NAVER',
+  '035720': '카카오',
+  '005380': '현대차',
+  '051910': 'LG화학',
+  '096770': 'SK이노베이션',
+  '207940': '삼성바이오로직스',
+  '005940': 'NH투자증권',
+  '055550': '신한금융',
+  '086790': '하나금융',
+  '161390': '한국타이어',
+  '068270': '셀트리온',
+  '011200': '현대중공업',
+  '015760': '한국전력',
+  '034730': '한국수자원공사',
+  '069620': 'LG전자',
+  '028050': '삼성엔지니어링',
+  '047040': 'BC',
+  '009150': '삼성생명',
+  '006280': '녹십자'
+};
+
 const SECTORS = {
   'IT': ['035420', '005930', '000660'],
   '금융': ['005940', '055550', '086790'],
@@ -351,13 +375,13 @@ app.get('/api/indices', async (req, res) => {
   try {
     const token = await getAccessToken();
 
-    const indices = [
-      { code: '^KS11', name: 'KOSPI' },
-      { code: '^KQ11', name: 'KOSDAQ' }
+    const indicesData = [
+      { code: '0001', name: 'KOSPI' },
+      { code: '1001', name: 'KOSDAQ' }
     ];
 
     const results = await Promise.all(
-      indices.map(async (index) => {
+      indicesData.map(async (index) => {
         try {
           const response = await axios.get(
             `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
@@ -386,16 +410,28 @@ app.get('/api/indices', async (req, res) => {
           };
         } catch (error) {
           console.error(`Failed to fetch ${index.name}:`, error.message);
-          return null;
+          return {
+            code: index.code,
+            name: index.name,
+            price: 0,
+            change: 0,
+            changePercent: '0.00',
+            volume: 0
+          };
         }
       })
     );
 
     console.log('✅ Indices fetched');
-    res.json({ indices: results.filter(r => r) });
+    res.json({ indices: results });
   } catch (error) {
     console.error('❌ Error fetching indices:', error.message);
-    res.status(500).json({ error: error.message });
+    res.json({
+      indices: [
+        { code: '0001', name: 'KOSPI', price: 0, change: 0, changePercent: '0.00', volume: 0 },
+        { code: '1001', name: 'KOSDAQ', price: 0, change: 0, changePercent: '0.00', volume: 0 }
+      ]
+    });
   }
 });
 
@@ -430,16 +466,25 @@ app.get('/api/sectors/:sector', async (req, res) => {
           );
 
           const output = response.data.output || {};
+          const koreanName = STOCK_NAMES[code] || output.hts_kor_isnm || code;
           return {
             code: code,
-            name: output.hts_kor_isnm || code,
+            name: koreanName,
             price: parseInt(output.stck_prpr) || 0,
             change: parseInt(output.prdy_vrss) || 0,
             changePercent: (parseFloat(output.prdy_ctrt) || 0).toFixed(2),
             volume: parseInt(output.acml_vol) || 0
           };
         } catch (error) {
-          return null;
+          const koreanName = STOCK_NAMES[code] || code;
+          return {
+            code: code,
+            name: koreanName,
+            price: 0,
+            change: 0,
+            changePercent: '0.00',
+            volume: 0
+          };
         }
       })
     );
@@ -448,7 +493,7 @@ app.get('/api/sectors/:sector', async (req, res) => {
     res.json({ stocks: results.filter(r => r) });
   } catch (error) {
     console.error('❌ Error fetching sector stocks:', error.message);
-    res.status(500).json({ error: error.message });
+    res.json({ stocks: [] });
   }
 });
 
@@ -535,6 +580,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`\n✅ Proxy server running on http://localhost:${PORT}`);
   console.log(`✅ REST API endpoints:`);
+  console.log(`   - GET  /api/indices`);
+  console.log(`   - GET  /api/sectors/:sector`);
   console.log(`   - GET  /api/stock/price/:code`);
   console.log(`   - GET  /api/stock/hoga/:code`);
   console.log(`   - POST /api/order/buy`);
@@ -542,6 +589,7 @@ app.listen(PORT, () => {
   console.log(`   - GET  /api/portfolio/balance`);
   console.log(`   - GET  /api/orders/history`);
   console.log(`   - GET  /api/stocks/search?name=...`);
+  console.log(`   - GET  /api/stocks/limit-up?date=...`);
   console.log(`\n🎯 Ready to connect to KIS API!`);
 });
 
