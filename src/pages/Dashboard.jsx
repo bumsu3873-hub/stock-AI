@@ -4,6 +4,7 @@ import LeftSidebar from '../components/LeftSidebar'
 import MainContent from '../components/MainContent'
 import RightPanel from '../components/RightPanel'
 import Portfolio from '../components/Portfolio'
+import PortfolioAnalysis from '../components/PortfolioAnalysis'
 import AdvancedAnalysis from './AdvancedAnalysis'
 
 function Dashboard() {
@@ -135,7 +136,10 @@ function Dashboard() {
           background: '#0f1419'
         }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <Portfolio portfolio={portfolio} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+              <div><Portfolio portfolio={portfolio} /></div>
+              <div><PortfolioAnalysis portfolio={portfolio} /></div>
+            </div>
           </div>
         </div>
       ) : (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import AdvancedChart from '../components/AdvancedChart'
+import CandlestickChart from '../components/CandlestickChart'
 import BacktestingPanel from '../components/BacktestingPanel'
 import PricePredictionPanel from '../components/PricePredictionPanel'
 import AlertManager from '../components/AlertManager'
@@ -83,6 +84,8 @@ function AdvancedAnalysis({ selectedStock = '005930' }) {
           stockCode={selectedStock}
           historicalData={historicalData}
         />
+
+        <CandlestickChart historicalData={historicalData} />
 
         <PricePredictionPanel
           historicalData={historicalData}
