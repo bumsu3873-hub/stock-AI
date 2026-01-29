@@ -63,36 +63,53 @@ async function getAccessToken() {
 
 app.get('/api/stock/price/:code', async (req, res) => {
   const { code } = req.params;
-  try {
-    const token = await getAccessToken();
+  let retries = 0;
+  const maxRetries = 3;
+  
+  const fetchWithRetry = async () => {
+    try {
+      const token = await getAccessToken();
 
-    const response = await axios.get(
-      `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
-      {
-        params: {
-          FID_COND_MRKT_DIV_CODE: 'J',
-          FID_INPUT_ISCD: code
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'appKey': APP_KEY,
-          'appSecret': APP_SECRET,
-          'tr_id': 'FHKST01010100'
+      const response = await axios.get(
+        `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
+        {
+          params: {
+            FID_COND_MRKT_DIV_CODE: 'J',
+            FID_INPUT_ISCD: code
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'appKey': APP_KEY,
+            'appSecret': APP_SECRET,
+            'tr_id': 'FHKST01010100'
+          }
         }
-      }
-    );
+      );
 
-     console.log(`✅ Stock price fetched for ${code}`);
-     res.json(response.data);
-   } catch (error) {
-     console.error(`❌ Error fetching stock price for ${code}:`, error.message);
-     console.error('Error response:', error.response?.status, error.response?.data);
-     res.status(500).json({
-       error: error.message,
-       status: error.response?.status,
-       details: error.response?.data
-     });
-   }
+       console.log(`✅ Stock price fetched for ${code}`);
+       res.json(response.data);
+     } catch (error) {
+       const errorCode = error.response?.data?.msg_cd;
+       
+       if ((errorCode === 'EGW00201' || errorCode === 'EGW00133') && retries < maxRetries) {
+         retries++;
+         const waitTime = Math.pow(2, retries) * 1000;
+         console.log(`⏳ Rate limit hit for ${code}, retrying in ${waitTime}ms (attempt ${retries}/${maxRetries})`);
+         await new Promise(resolve => setTimeout(resolve, waitTime));
+         return fetchWithRetry();
+       }
+       
+       console.error(`❌ Error fetching stock price for ${code}:`, error.message);
+       console.error('Error response:', error.response?.status, error.response?.data);
+       res.status(500).json({
+         error: error.message,
+         status: error.response?.status,
+         details: error.response?.data
+       });
+     }
+  };
+  
+  return fetchWithRetry();
 });
 
 app.get('/api/stock/hoga/:code', async (req, res) => {
