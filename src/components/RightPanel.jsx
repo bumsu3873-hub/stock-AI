@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Newspaper, Link } from 'lucide-react'
 
 function RightPanel({ selectedStock, sectorStocks }) {
   const [relatedStocks, setRelatedStocks] = useState([])
@@ -18,70 +19,113 @@ function RightPanel({ selectedStock, sectorStocks }) {
 
   return (
     <div style={{
-      width: '340px',
-      borderLeft: '1px solid #1e2330',
-      background: '#0f1419',
-      overflow: 'y',
-      padding: '20px',
+      width: '320px',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      gap: '20px'
     }}>
-      <h3 style={{ fontSize: '12px', opacity: 0.7, marginBottom: '20px', textTransform: 'uppercase' }}>
-        📰 뉴스 피드
-      </h3>
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        padding: '20px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+        border: '1px solid #f0f0f0'
+      }}>
+        <h3 style={{ 
+          fontSize: '16px', 
+          fontWeight: '700', 
+          color: '#1a1f3a', 
+          marginBottom: '15px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <Newspaper size={18} color="#1e90ff" />
+          뉴스 피드
+        </h3>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '30px' }}>
-        {mockNews.map((news, idx) => (
-          <div key={idx} style={{
-            padding: '12px',
-            background: '#14181f',
-            borderRadius: '6px',
-            borderLeft: '2px solid #1e90ff',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            '&:hover': { background: '#1a1f2e' }
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span style={{ fontSize: '11px', opacity: 0.7 }}>{news.time}</span>
-              <span style={{ fontSize: '10px', opacity: 0.5 }}>{news.source}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {mockNews.map((news, idx) => (
+            <div key={idx} style={{
+              padding: '12px',
+              background: '#f8f9fa',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              border: '1px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#fff'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'
+              e.currentTarget.style.borderColor = '#e1e4e8'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#f8f9fa'
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.borderColor = 'transparent'
+            }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#1e90ff', fontWeight: '600' }}>{news.time}</span>
+                <span style={{ fontSize: '11px', color: '#999' }}>{news.source}</span>
+              </div>
+              <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#333', fontWeight: '500' }}>
+                {news.title}
+              </div>
             </div>
-            <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-              {news.title}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      <h3 style={{ fontSize: '12px', opacity: 0.7, marginBottom: '20px', textTransform: 'uppercase' }}>
-        🔗 관련 종목
-      </h3>
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        padding: '20px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+        border: '1px solid #f0f0f0',
+        flex: 1
+      }}>
+        <h3 style={{ 
+          fontSize: '16px', 
+          fontWeight: '700', 
+          color: '#1a1f3a', 
+          marginBottom: '15px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <Link size={18} color="#1e90ff" />
+          관련 종목
+        </h3>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-        {relatedStocks.map(stock => (
-          <div key={stock.code} style={{
-            padding: '10px',
-            background: '#14181f',
-            borderRadius: '6px',
-            border: '1px solid #1e2330'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{stock.name}</span>
-              <span style={{ fontSize: '10px', opacity: 0.7 }}>{stock.code}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {relatedStocks.map(stock => (
+            <div key={stock.code} style={{
+              padding: '12px',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '2px' }}>{stock.name}</div>
+                <div style={{ fontSize: '11px', color: '#999' }}>{stock.code}</div>
+              </div>
+               <div style={{ textAlign: 'right' }}>
+                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1f3a' }}>
+                   {stock.price.toLocaleString()}
+                 </div>
+                 <div style={{
+                   fontSize: '11px',
+                   color: stock.change >= 0 ? '#ff4757' : '#1e90ff',
+                   fontWeight: '600'
+                 }}>
+                   {stock.change >= 0 ? '▲' : '▼'} {Math.abs(parseFloat(stock.changePercent))}%
+                 </div>
+               </div>
             </div>
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                 {stock.price.toLocaleString()}원
-               </span>
-               <span style={{
-                 fontSize: '11px',
-                 color: stock.change >= 0 ? '#ff4757' : '#1e90ff',
-                 fontWeight: 'bold'
-               }}>
-                 {stock.change >= 0 ? '▲' : '▼'} {Math.abs(parseFloat(stock.changePercent))}%
-               </span>
-             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )

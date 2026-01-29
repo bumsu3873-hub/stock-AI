@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import StockChart from './StockChart'
 import OrderModal from './OrderModal'
+import { TrendingUp, TrendingDown, Activity, BarChart2, DollarSign, Clock } from 'lucide-react'
 
 function MainContent({ selectedStock, sectorStocks }) {
   const [stockData, setStockData] = useState(null)
@@ -41,198 +42,312 @@ function MainContent({ selectedStock, sectorStocks }) {
   }, [selectedStock])
 
   if (loading || !stockData) {
-    return <div style={{ padding: '20px' }}>로딩 중...</div>
+    return (
+      <div style={{ 
+        flex: 1, 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        height: '100%' 
+      }}>
+        <div style={{ color: '#1e90ff', fontWeight: '600' }}>데이터를 불러오는 중...</div>
+      </div>
+    )
   }
 
   const isMobile = window.innerWidth < 768
+  const isUp = stockData.change >= 0
 
   return (
     <div style={{
       flex: 1,
       overflow: 'auto',
-      padding: isMobile ? '15px' : '30px',
-      background: '#0f1419'
+      padding: isMobile ? '15px' : '0 20px',
+      height: '100%'
     }}>
-      <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ fontSize: '32px', margin: '0 0 10px 0' }}>
-          {stockData.name}
-        </h1>
-        <p style={{ margin: 0, opacity: 0.7, fontSize: '14px' }}>
-          {stockData.code}
-        </p>
+      <div style={{ marginBottom: '25px' }}>
+        <h3 style={{ 
+          fontSize: '14px', 
+          fontWeight: '700', 
+          color: '#666', 
+          marginBottom: '10px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          🔥 실시간 핫 종목
+        </h3>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+          gap: '15px' 
+        }}>
+          {sectorStocks.slice(0, 3).map(stock => (
+            <div key={stock.code} style={{
+              background: '#fff',
+              padding: '15px',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+              border: '1px solid #f0f0f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>{stock.name}</div>
+                <div style={{ fontSize: '12px', color: '#999' }}>{stock.code}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#1a1f3a' }}>
+                  {stock.price.toLocaleString()}
+                </div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: stock.change >= 0 ? '#ff4757' : '#1e90ff',
+                  fontWeight: '600'
+                }}>
+                  {stock.change >= 0 ? '+' : ''}{stock.changePercent}%
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-       <div style={{
-         display: 'flex',
-         gap: '10px',
-         marginBottom: '20px'
-       }}>
-         <button
-           onClick={() => {
-             setOrderType('buy')
-             setShowOrderModal(true)
-           }}
-           style={{
-             flex: 1,
-             padding: '12px 20px',
-             background: '#ff4757',
-             color: '#fff',
-             border: 'none',
-             borderRadius: '8px',
-             fontSize: '14px',
-             fontWeight: 'bold',
-             cursor: 'pointer',
-             transition: 'all 0.2s'
-           }}
-         >
-           📈 매수
-         </button>
-         <button
-           onClick={() => {
-             setOrderType('sell')
-             setShowOrderModal(true)
-           }}
-           style={{
-             flex: 1,
-             padding: '12px 20px',
-             background: '#1e90ff',
-             color: '#fff',
-             border: 'none',
-             borderRadius: '8px',
-             fontSize: '14px',
-             fontWeight: 'bold',
-             cursor: 'pointer',
-             transition: 'all 0.2s'
-           }}
-         >
-           📉 매도
-         </button>
-       </div>
-
-       <div style={{
-         display: 'grid',
-         gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
-         gap: '15px',
-         marginBottom: '30px'
-       }}>
-        <div style={{
-          padding: '20px',
-          background: '#14181f',
-          borderRadius: '8px',
-          borderLeft: '3px solid #1e90ff'
+      <div style={{
+        background: '#fff',
+        borderRadius: '20px',
+        padding: '30px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+        border: '1px solid #e1e4e8',
+        marginBottom: '20px'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: '20px',
+          marginBottom: '30px'
         }}>
-          <div style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>현재가</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-            {stockData.price.toLocaleString()}원
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+              <h1 style={{ fontSize: '32px', fontWeight: '800', margin: 0, color: '#1a1f3a' }}>
+                {stockData.name}
+              </h1>
+              <span style={{ 
+                background: '#f5f7fa', 
+                padding: '4px 8px', 
+                borderRadius: '6px', 
+                fontSize: '13px', 
+                color: '#666',
+                fontWeight: '600'
+              }}>
+                {stockData.code}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '15px' }}>
+              <span style={{ fontSize: '36px', fontWeight: '800', color: isUp ? '#ff4757' : '#1e90ff' }}>
+                {stockData.price.toLocaleString()}
+                <span style={{ fontSize: '20px', marginLeft: '2px' }}>원</span>
+              </span>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '5px',
+                fontSize: '16px', 
+                fontWeight: '600',
+                color: isUp ? '#ff4757' : '#1e90ff'
+              }}>
+                {isUp ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                <span>{isUp ? '▲' : '▼'} {Math.abs(stockData.change).toLocaleString()}</span>
+                <span>({stockData.changePercent}%)</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => {
+                setOrderType('buy')
+                setShowOrderModal(true)
+              }}
+              style={{
+                padding: '12px 30px',
+                background: '#ff4757',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 12px rgba(255, 71, 87, 0.3)'
+              }}
+            >
+              매수하기
+            </button>
+            <button
+              onClick={() => {
+                setOrderType('sell')
+                setShowOrderModal(true)
+              }}
+              style={{
+                padding: '12px 30px',
+                background: '#1e90ff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 12px rgba(30, 144, 255, 0.3)'
+              }}
+            >
+              매도하기
+            </button>
           </div>
         </div>
 
         <div style={{
-          padding: '20px',
-          background: '#14181f',
-          borderRadius: '8px',
-          borderLeft: `3px solid ${stockData.change >= 0 ? '#ff4757' : '#1e90ff'}`
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+          gap: '15px',
+          marginBottom: '30px'
         }}>
-          <div style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>변동</div>
-          <div style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: stockData.change >= 0 ? '#ff4757' : '#1e90ff'
+          <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', color: '#666' }}>
+              <Activity size={14} />
+              <span style={{ fontSize: '12px', fontWeight: '600' }}>거래량</span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#333' }}>
+              {(stockData.volume / 1000000).toFixed(1)}M
+            </div>
+          </div>
+
+          <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', color: '#666' }}>
+              <BarChart2 size={14} />
+              <span style={{ fontSize: '12px', fontWeight: '600' }}>시가</span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#333' }}>
+              {stockData.open.toLocaleString()}
+            </div>
+          </div>
+
+          <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', color: '#666' }}>
+              <TrendingUp size={14} />
+              <span style={{ fontSize: '12px', fontWeight: '600' }}>고가</span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#ff4757' }}>
+              {stockData.high.toLocaleString()}
+            </div>
+          </div>
+
+          <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', color: '#666' }}>
+              <TrendingDown size={14} />
+              <span style={{ fontSize: '12px', fontWeight: '600' }}>저가</span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1e90ff' }}>
+              {stockData.low.toLocaleString()}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1f3a', margin: 0 }}>
+              주가 차트
+            </h3>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              {['1일', '1주', '1달', '1년'].map(period => (
+                <button key={period} style={{
+                  padding: '4px 10px',
+                  background: period === '1일' ? '#1e90ff' : 'transparent',
+                  color: period === '1일' ? '#fff' : '#666',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}>
+                  {period}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ 
+            height: '350px', 
+            background: '#f8f9fa', 
+            borderRadius: '12px', 
+            padding: '20px',
+            border: '1px solid #f0f0f0'
           }}>
-            {stockData.change >= 0 ? '+' : ''}{stockData.change.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '12px', marginTop: '5px' }}>
-            {stockData.changePercent > 0 ? '+' : ''}{stockData.changePercent}%
+            <StockChart price={stockData.price} />
           </div>
         </div>
 
-        <div style={{
+        <div style={{ 
+          background: '#f8f9fa', 
+          borderRadius: '12px', 
           padding: '20px',
-          background: '#14181f',
-          borderRadius: '8px',
-          borderLeft: '3px solid #2ecc71'
+          border: '1px solid #f0f0f0'
         }}>
-          <div style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>거래량</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-            {(stockData.volume / 1000000).toFixed(1)}M
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: '#666' }}>52주 최저</span>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: '#666' }}>52주 최고</span>
           </div>
-        </div>
-
-        <div style={{
-          padding: '20px',
-          background: '#14181f',
-          borderRadius: '8px',
-          borderLeft: '3px solid #f39c12'
-        }}>
-          <div style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>오늘 범위</div>
-          <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
-            <div>{stockData.high.toLocaleString()} - {stockData.low.toLocaleString()}</div>
+          <div style={{ 
+            height: '6px', 
+            background: '#e1e4e8', 
+            borderRadius: '3px', 
+            position: 'relative',
+            marginBottom: '10px'
+          }}>
+            <div style={{
+              position: 'absolute',
+              left: '0%',
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(90deg, #1e90ff 0%, #ff4757 100%)',
+              borderRadius: '3px',
+              opacity: 0.3
+            }}></div>
+            <div style={{
+              position: 'absolute',
+              left: `${((stockData.price - stockData.low52) / (stockData.high52 - stockData.low52)) * 100}%`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '12px',
+              height: '12px',
+              background: '#fff',
+              border: '3px solid #1a1f3a',
+              borderRadius: '50%',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}></div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '14px', fontWeight: '700', color: '#1a1f3a' }}>{stockData.low52.toLocaleString()}</span>
+            <span style={{ fontSize: '14px', fontWeight: '700', color: '#1a1f3a' }}>{stockData.high52.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
-       <div style={{
-         padding: '20px',
-         background: '#14181f',
-         borderRadius: '8px',
-         marginBottom: '30px'
-       }}>
-         <h3 style={{ margin: '0 0 20px 0', fontSize: '14px' }}>📈 차트</h3>
-         <StockChart price={stockData.price} />
-       </div>
-
-       <div style={{
-         display: 'grid',
-         gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-         gap: '15px'
-       }}>
-        <div style={{
-          padding: '20px',
-          background: '#14181f',
-          borderRadius: '8px'
-        }}>
-          <h4 style={{ margin: '0 0 15px 0', fontSize: '13px', opacity: 0.7 }}>52주 범위</h4>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-            <div>
-              <div style={{ opacity: 0.7, marginBottom: '5px' }}>고가</div>
-              <div style={{ fontWeight: 'bold', color: '#ff4757' }}>
-                {stockData.high52.toLocaleString()}원
-              </div>
-            </div>
-            <div>
-              <div style={{ opacity: 0.7, marginBottom: '5px' }}>저가</div>
-              <div style={{ fontWeight: 'bold', color: '#1e90ff' }}>
-                {stockData.low52.toLocaleString()}원
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{
-          padding: '20px',
-          background: '#14181f',
-          borderRadius: '8px'
-        }}>
-          <h4 style={{ margin: '0 0 15px 0', fontSize: '13px', opacity: 0.7 }}>오늘 시가</h4>
-          <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
-            {stockData.open.toLocaleString()}원
-           </div>
-         </div>
-       </div>
-
-       {showOrderModal && (
-         <OrderModal
-           stock={stockData}
-           orderType={orderType}
-           onClose={() => setShowOrderModal(false)}
-           onSuccess={() => {
-             setShowOrderModal(false)
-             alert(`${orderType === 'buy' ? '매수' : '매도'} 주문이 완료되었습니다!`)
-           }}
-         />
-       )}
-     </div>
-   )
+      {showOrderModal && (
+        <OrderModal
+          stock={stockData}
+          orderType={orderType}
+          onClose={() => setShowOrderModal(false)}
+          onSuccess={() => {
+            setShowOrderModal(false)
+            alert(`${orderType === 'buy' ? '매수' : '매도'} 주문이 완료되었습니다!`)
+          }}
+        />
+      )}
+    </div>
+  )
 }
 
 export default MainContent
