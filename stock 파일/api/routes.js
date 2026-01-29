@@ -4,6 +4,29 @@ import { searchStocks, getStockPrice } from '../services/stock-service.js';
 
 const router = express.Router();
 
+// KOSPI, KOSDAQ 지수 데이터
+router.get('/indices', (req, res) => {
+  const indices = [
+    {
+      name: 'KOSPI',
+      value: 2528.50,
+      change: -35.50,
+      changeRate: -1.39,
+      high: 2565.30,
+      low: 2515.20
+    },
+    {
+      name: 'KOSDAQ',
+      value: 775.33,
+      change: 9.10,
+      changeRate: 1.19,
+      high: 785.20,
+      low: 768.50
+    }
+  ];
+  res.json({ indices });
+});
+
 router.get('/stocks/limit-up', (req, res) => {
   const date = req.query.date;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
