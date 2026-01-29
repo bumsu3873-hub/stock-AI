@@ -32,19 +32,9 @@ function MainContent({ selectedStock, sectorStocks }) {
          })
        } catch (error) {
          console.error('Failed to fetch stock data:', error)
-         setStockData({
-           code: selectedStock,
-           name: '데이터 로딩 오류',
-           price: 0,
-           change: 0,
-           changePercent: '0.00',
-           volume: 0,
-           high: 0,
-           low: 0,
-           open: 0,
-           high52: 0,
-           low52: 0
-         })
+         setTimeout(() => {
+           fetchStockData()
+         }, 2000)
        }
        setLoading(false)
      }

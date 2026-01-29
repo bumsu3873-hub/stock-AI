@@ -108,23 +108,23 @@ function LeftSidebar({ selectedSector, onSectorChange, sectorStocks, onStockSele
                 <span style={{ fontSize: '11px', color: '#999' }}>{stock.code}</span>
               </div>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: '8px' }}>
-                <span style={{ fontSize: '15px', fontWeight: '700', color: '#1a1f3a' }}>
-                  {stock.price.toLocaleString()}원
-                </span>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '4px',
-                  color: isUp ? '#ff4757' : '#1e90ff',
-                  background: isUp ? 'rgba(255, 71, 87, 0.05)' : 'rgba(30, 144, 255, 0.05)',
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: '8px' }}>
+                 <span style={{ fontSize: '13px', color: '#999' }}>
+                   클릭하여 선택
+                 </span>
+                 <div style={{ 
+                   display: 'flex', 
+                   alignItems: 'center', 
+                   gap: '4px',
+                   color: '#1e90ff',
+                   background: 'rgba(30, 144, 255, 0.1)',
                   padding: '4px 8px',
-                  borderRadius: '6px'
-                }}>
-                  <span style={{ fontSize: '12px', fontWeight: '600' }}>
-                    {isUp ? '▲' : '▼'} {Math.abs(parseFloat(stock.changePercent))}%
-                  </span>
-                </div>
+                   borderRadius: '6px'
+                 }}>
+                   <span style={{ fontSize: '12px', fontWeight: '600' }}>
+                     →
+                   </span>
+                 </div>
               </div>
             </div>
           )

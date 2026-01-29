@@ -44,10 +44,18 @@ async function getAccessToken() {
     console.log('✅ Access token issued successfully');
     return accessToken;
   } catch (error) {
-    console.error('❌ Token issuance failed:', error.response?.data || error.message);
+    const errorMsg = error.response?.data?.error_code || error.message;
+    console.error('❌ Token issuance failed:', errorMsg);
+    
     if (accessToken) {
       console.log('⚠️ Using existing token due to rate limit');
       return accessToken;
+    }
+    
+    if (errorMsg === 'EGW00133') {
+      console.log('⏳ Rate limit detected, waiting 60 seconds...');
+      await new Promise(resolve => setTimeout(resolve, 60000));
+      return getAccessToken();
     }
     throw error;
   }
@@ -385,53 +393,19 @@ app.get('/api/indices', async (req, res) => {
 app.get('/api/sectors/:sector', async (req, res) => {
   const { sector } = req.params;
   try {
-    const token = await getAccessToken();
-
     const codes = SECTORS[sector] || [];
     
     if (codes.length === 0) {
       return res.json({ stocks: [] });
     }
 
-    const results = await Promise.all(
-      codes.map(async (code) => {
-        try {
-          const response = await axios.get(
-            `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
-            {
-              params: {
-                FID_COND_MRKT_DIV_CODE: 'J',
-                FID_INPUT_ISCD: code
-              },
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'appKey': APP_KEY,
-                'appSecret': APP_SECRET,
-                'tr_id': 'FHKST01010100'
-              }
-            }
-          );
+    const stocks = codes.slice(0, 10).map(code => ({
+      code: code,
+      name: STOCK_NAMES[code] || code
+    }));
 
-          const output = response.data.output || {};
-          const koreanName = STOCK_NAMES[code] || output.hts_kor_isnm || code;
-          return {
-            code: code,
-            name: koreanName,
-            price: parseInt(output.stck_prpr) || 0,
-            change: parseInt(output.prdy_vrss) || 0,
-            changePercent: (parseFloat(output.prdy_ctrt) || 0).toFixed(2),
-            volume: parseInt(output.acml_vol) || 0
-          };
-         } catch (error) {
-           console.error(`Failed to fetch stock ${code}:`, error.message);
-           return null;
-         }
-      })
-    );
-
-     const validStocks = results.filter(r => r !== null);
-     console.log(`✅ Sector ${sector} stocks fetched`);
-     res.json({ stocks: validStocks });
+    console.log(`✅ Sector ${sector} stocks fetched (${stocks.length} items)`);
+    res.json({ stocks });
    } catch (error) {
      console.error(`❌ Error fetching sector ${sector} stocks:`, error.message);
      res.json({ stocks: [] });
