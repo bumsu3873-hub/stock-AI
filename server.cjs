@@ -54,9 +54,9 @@ async function getAccessToken() {
 }
 
 app.get('/api/stock/price/:code', async (req, res) => {
+  const { code } = req.params;
   try {
     const token = await getAccessToken();
-    const { code } = req.params;
 
     const response = await axios.get(
       `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
@@ -74,15 +74,17 @@ app.get('/api/stock/price/:code', async (req, res) => {
       }
     );
 
-    console.log(`✅ Stock price fetched for ${code}`);
-    res.json(response.data);
-  } catch (error) {
-    console.error(`❌ Error fetching stock price:`, error.message);
-    res.status(500).json({
-      error: error.message,
-      details: error.response?.data
-    });
-  }
+     console.log(`✅ Stock price fetched for ${code}`);
+     res.json(response.data);
+   } catch (error) {
+     console.error(`❌ Error fetching stock price for ${code}:`, error.message);
+     console.error('Error response:', error.response?.status, error.response?.data);
+     res.status(500).json({
+       error: error.message,
+       status: error.response?.status,
+       details: error.response?.data
+     });
+   }
 });
 
 app.get('/api/stock/hoga/:code', async (req, res) => {
@@ -381,9 +383,9 @@ app.get('/api/indices', async (req, res) => {
 });
 
 app.get('/api/sectors/:sector', async (req, res) => {
+  const { sector } = req.params;
   try {
     const token = await getAccessToken();
-    const { sector } = req.params;
 
     const codes = SECTORS[sector] || [];
     
