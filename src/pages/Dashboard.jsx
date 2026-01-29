@@ -27,15 +27,6 @@ function Dashboard() {
     return currentTime >= 900 && currentTime <= 1530
   }
 
-  const shouldFetchData = () => {
-    const now = new Date()
-    const hours = now.getHours()
-    const minutes = now.getMinutes()
-    const currentTime = hours * 100 + minutes
-    
-    return currentTime >= 1530
-  }
-
   useEffect(() => {
     const marketStatus = isKoreanMarketOpen()
     setIsMarketOpen(marketStatus)
@@ -49,8 +40,6 @@ function Dashboard() {
 
   useEffect(() => {
     const fetchIndices = async () => {
-      if (!shouldFetchData()) return
-      
       try {
         const response = await fetch('http://localhost:3000/api/indices')
         const data = await response.json()
@@ -62,14 +51,10 @@ function Dashboard() {
     }
 
     fetchIndices()
-    const dailyInterval = setInterval(fetchIndices, 24 * 60 * 60 * 1000)
-    return () => clearInterval(dailyInterval)
   }, [])
 
   useEffect(() => {
     const fetchSectorStocks = async () => {
-      if (!shouldFetchData()) return
-      
       try {
         const response = await fetch(`http://localhost:3000/api/sectors/${selectedSector}`)
         const data = await response.json()
@@ -80,8 +65,6 @@ function Dashboard() {
     }
 
     fetchSectorStocks()
-    const dailyInterval = setInterval(fetchSectorStocks, 24 * 60 * 60 * 1000)
-    return () => clearInterval(dailyInterval)
   }, [selectedSector])
 
 
