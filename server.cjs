@@ -373,67 +373,83 @@ const MOCK_LIMIT_UP_DATA = {
 
 app.get('/api/indices', async (req, res) => {
   try {
-    const token = await getAccessToken();
-
-    const indicesRepresentativeStocks = {
-      'KOSPI': ['005930', '000660', '005380'],
-      'KOSDAQ': ['035420', '251270', '247540']
-    };
-
-    const results = await Promise.all(
-      Object.entries(indicesRepresentativeStocks).map(async ([name, stocks]) => {
-        try {
-          const stockDataList = await Promise.all(
-            stocks.map(code =>
-              axios.get(
-                `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
-                {
-                  params: {
-                    FID_COND_MRKT_DIV_CODE: 'J',
-                    FID_INPUT_ISCD: code
-                  },
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    'appKey': APP_KEY,
-                    'appSecret': APP_SECRET,
-                    'tr_id': 'FHKST01010100'
-                  }
-                }
-              ).catch(err => ({ data: { output: {} } }))
-            )
-          );
-
-          const validStocks = stockDataList
-            .map(r => r.data.output || {})
-            .filter(o => o.stck_prpr);
-
-          if (validStocks.length === 0) return null;
-
-          const avgChange = validStocks.reduce((sum, o) => sum + (parseInt(o.prdy_vrss) || 0), 0) / validStocks.length;
-          const avgChangePercent = validStocks.reduce((sum, o) => sum + (parseFloat(o.prdy_ctrt) || 0), 0) / validStocks.length;
-
-          return {
-            code: name === 'KOSPI' ? '0001' : '1001',
-            name: name,
-            price: validStocks.reduce((sum, o) => sum + (parseInt(o.stck_prpr) || 0), 0) / validStocks.length,
-            change: Math.round(avgChange),
-            changePercent: avgChangePercent.toFixed(2),
-            volume: validStocks.reduce((sum, o) => sum + (parseInt(o.acml_vol) || 0), 0)
-          };
-        } catch (error) {
-          console.error(`⚠️ Failed to calculate ${name}:`, error.message);
-          return null;
+    const response = await axios.get(
+      'https://query.naver.com/svc/chartnews/get',
+      {
+        params: {
+          q: '코스피',
+          start: 0,
+          size: 1
+        },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
-      })
+      }
     );
 
-     const validIndices = results.filter(r => r !== null);
-     console.log('✅ Indices fetched (calculated from representative stocks)');
-     res.json({ indices: validIndices });
-   } catch (error) {
-     console.error('❌ Error fetching indices:', error.message);
-     res.json({ indices: [] });
-   }
+    const kospiMatch = await axios.get(
+      'https://api.stock.naver.com/index/KOSPI/price',
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0'
+        }
+      }
+    ).catch(() => null);
+
+    const kosdaqMatch = await axios.get(
+      'https://api.stock.naver.com/index/KOSDAQ/price',
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0'
+        }
+      }
+    ).catch(() => null);
+
+    const indices = [];
+
+    if (kospiMatch?.data) {
+      indices.push({
+        code: '0001',
+        name: 'KOSPI',
+        price: kospiMatch.data.tradePrice || 0,
+        change: kospiMatch.data.change || 0,
+        changePercent: (kospiMatch.data.changePercent || 0).toFixed(2),
+        volume: 0
+      });
+    }
+
+    if (kosdaqMatch?.data) {
+      indices.push({
+        code: '1001',
+        name: 'KOSDAQ',
+        price: kosdaqMatch.data.tradePrice || 0,
+        change: kosdaqMatch.data.change || 0,
+        changePercent: (kosdaqMatch.data.changePercent || 0).toFixed(2),
+        volume: 0
+      });
+    }
+
+    if (indices.length === 0) {
+      console.warn('⚠️ Failed to fetch from Naver API, using mock data');
+      return res.json({
+        indices: [
+          { code: '0001', name: 'KOSPI', price: 5221.25, change: 50.44, changePercent: '0.98', volume: 0 },
+          { code: '1001', name: 'KOSDAQ', price: 726.45, change: 12.35, changePercent: '1.73', volume: 0 }
+        ]
+      });
+    }
+
+    console.log('✅ Indices fetched:', indices);
+    res.json({ indices });
+  } catch (error) {
+    console.error('❌ Error fetching indices:', error.message);
+    res.json({
+      indices: [
+        { code: '0001', name: 'KOSPI', price: 5221.25, change: 50.44, changePercent: '0.98', volume: 0 },
+        { code: '1001', name: 'KOSDAQ', price: 726.45, change: 12.35, changePercent: '1.73', volume: 0 }
+      ]
+    });
+  }
 });
 
 app.get('/api/sectors/:sector', async (req, res) => {

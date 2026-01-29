@@ -6,35 +6,51 @@ function MainContent({ selectedStock, sectorStocks }) {
   const [stockData, setStockData] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchStockData = async () => {
-      setLoading(true)
-      try {
-        const response = await fetch(`http://localhost:3000/api/stock/price/${selectedStock}`)
-        const data = await response.json()
-        const output = data.output || {}
-        
-        setStockData({
-          code: selectedStock,
-          name: output.hts_kor_isnm || '주식',
-          price: parseInt(output.stck_prpr) || 0,
-          change: parseInt(output.prdy_vrss) || 0,
-          changePercent: (parseFloat(output.prdy_ctrt) || 0).toFixed(2),
-          volume: parseInt(output.acml_vol) || 0,
-          high: parseInt(output.stck_hgpr) || 0,
-          low: parseInt(output.stck_lwpr) || 0,
-          open: parseInt(output.stck_oprc) || 0,
-          high52: parseInt(output.w52_hgpr) || 0,
-          low52: parseInt(output.w52_lwpr) || 0
-        })
-      } catch (error) {
-        console.error('Failed to fetch stock data:', error)
-      }
-      setLoading(false)
-    }
+   useEffect(() => {
+     const fetchStockData = async () => {
+       setLoading(true)
+       try {
+         const response = await fetch(`http://localhost:3000/api/stock/price/${selectedStock}`)
+         if (!response.ok) {
+           throw new Error(`API Error: ${response.status}`)
+         }
+         const data = await response.json()
+         const output = data.output || {}
+         
+         setStockData({
+           code: selectedStock,
+           name: output.hts_kor_isnm || '주식',
+           price: parseInt(output.stck_prpr) || 0,
+           change: parseInt(output.prdy_vrss) || 0,
+           changePercent: (parseFloat(output.prdy_ctrt) || 0).toFixed(2),
+           volume: parseInt(output.acml_vol) || 0,
+           high: parseInt(output.stck_hgpr) || 0,
+           low: parseInt(output.stck_lwpr) || 0,
+           open: parseInt(output.stck_oprc) || 0,
+           high52: parseInt(output.w52_hgpr) || 0,
+           low52: parseInt(output.w52_lwpr) || 0
+         })
+       } catch (error) {
+         console.error('Failed to fetch stock data:', error)
+         setStockData({
+           code: selectedStock,
+           name: '데이터 로딩 오류',
+           price: 0,
+           change: 0,
+           changePercent: '0.00',
+           volume: 0,
+           high: 0,
+           low: 0,
+           open: 0,
+           high52: 0,
+           low52: 0
+         })
+       }
+       setLoading(false)
+     }
 
-    fetchStockData()
-  }, [selectedStock])
+     fetchStockData()
+   }, [selectedStock])
 
   if (loading || !stockData) {
     return (

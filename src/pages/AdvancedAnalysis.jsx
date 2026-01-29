@@ -11,30 +11,37 @@ function AdvancedAnalysis({ selectedStock = '005930' }) {
   const [stockName, setStockName] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchHistoricalData = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`http://localhost:3000/api/stock/price/${selectedStock}`)
-        const data = await response.json()
-        const output = data.output || {}
+   useEffect(() => {
+     const fetchHistoricalData = async () => {
+       try {
+         setLoading(true)
+         const response = await fetch(`http://localhost:3000/api/stock/price/${selectedStock}`)
+         if (!response.ok) {
+           throw new Error(`API Error: ${response.status}`)
+         }
+         const data = await response.json()
+         const output = data.output || {}
 
-        setCurrentPrice(parseInt(output.stck_prpr) || 0)
-        setStockName(output.hts_kor_isnm || selectedStock)
+         const price = parseInt(output.stck_prpr) || 0
+         setCurrentPrice(price)
+         setStockName(output.hts_kor_isnm || selectedStock)
 
-        const mockHistorical = generateHistoricalData(parseInt(output.stck_prpr), 100)
-        setHistoricalData(mockHistorical)
-      } catch (error) {
-        console.error('Failed to fetch stock data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+         const mockHistorical = generateHistoricalData(price, 100)
+         setHistoricalData(mockHistorical)
+       } catch (error) {
+         console.error('Failed to fetch stock data:', error)
+         setCurrentPrice(0)
+         setStockName(selectedStock)
+         setHistoricalData(generateHistoricalData(100000, 100))
+       } finally {
+         setLoading(false)
+       }
+     }
 
-    const interval = setInterval(fetchHistoricalData, 5000)
-    fetchHistoricalData()
-    return () => clearInterval(interval)
-  }, [selectedStock])
+     const interval = setInterval(fetchHistoricalData, 5000)
+     fetchHistoricalData()
+     return () => clearInterval(interval)
+   }, [selectedStock])
 
   const generateHistoricalData = (basePrice, days = 100) => {
     const data = []

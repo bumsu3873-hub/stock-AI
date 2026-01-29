@@ -58,7 +58,7 @@ function Header({ indices = [], lastUpdateTime = new Date() }) {
             color: '#1a1f3a',
             letterSpacing: '-0.5px'
           }}>
-            StockEasy
+            Stock AI
           </h1>
           <div style={{ 
             display: 'flex',
@@ -107,7 +107,7 @@ function Header({ indices = [], lastUpdateTime = new Date() }) {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <span style={{ color: isMarketOpen() ? '#ff4757' : '#999', fontSize: '20px' }}>●</span> StockEasy
+           <span style={{ color: isMarketOpen() ? '#ff4757' : '#999', fontSize: '20px' }}>●</span> Stock AI
         </h1>
         <div style={{ 
           display: 'flex',

@@ -42,15 +42,24 @@ function Dashboard() {
     const fetchIndices = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/indices')
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status}`)
+        }
         const data = await response.json()
-        setIndices(data.indices || [])
+        const indices = data.indices || []
+        setIndices(indices)
         setLastUpdateTime(new Date())
+        console.log('✅ Indices loaded:', indices)
       } catch (error) {
-        console.error('Failed to fetch indices:', error)
+        console.error('❌ Failed to fetch indices:', error)
+        setIndices([])
       }
     }
 
     fetchIndices()
+    // 30초마다 갱신
+    const interval = setInterval(fetchIndices, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
