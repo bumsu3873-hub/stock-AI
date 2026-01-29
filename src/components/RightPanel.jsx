@@ -112,17 +112,23 @@ function RightPanel({ selectedStock, sectorStocks }) {
                 <div style={{ fontSize: '11px', color: '#999' }}>{stock.code}</div>
               </div>
                <div style={{ textAlign: 'right' }}>
-                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1f3a' }}>
-                   {stock.price.toLocaleString()}
-                 </div>
-                 <div style={{
-                   fontSize: '11px',
-                   color: stock.change >= 0 ? '#ff4757' : '#1e90ff',
-                   fontWeight: '600'
-                 }}>
-                   {stock.change >= 0 ? '▲' : '▼'} {Math.abs(parseFloat(stock.changePercent))}%
-                 </div>
-               </div>
+                  {stock.price ? (
+                    <>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1f3a' }}>
+                        {stock.price.toLocaleString()}
+                      </div>
+                      <div style={{
+                        fontSize: '11px',
+                        color: stock.change >= 0 ? '#ff4757' : '#1e90ff',
+                        fontWeight: '600'
+                      }}>
+                        {stock.change >= 0 ? '▲' : '▼'} {Math.abs(parseFloat(stock.changePercent))}%
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: '12px', color: '#999' }}>클릭하여 보기</div>
+                  )}
+                </div>
             </div>
           ))}
         </div>
