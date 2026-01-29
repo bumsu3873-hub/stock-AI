@@ -4,20 +4,32 @@ import { Newspaper, Link } from 'lucide-react'
 function RightPanel({ selectedStock, sectorStocks }) {
   const [relatedStocks, setRelatedStocks] = useState([])
   const [selectedStockName, setSelectedStockName] = useState('')
+  const [news, setNews] = useState([])
+  const [loadingNews, setLoadingNews] = useState(false)
 
   useEffect(() => {
     const selected = sectorStocks.find(s => s.code === selectedStock)
     if (selected) {
       setSelectedStockName(selected.name || selectedStock)
       setRelatedStocks(sectorStocks.filter(s => s.code !== selectedStock).slice(0, 5))
+      fetchNews(selected.name || selectedStock)
     }
   }, [selectedStock, sectorStocks])
 
-  const mockNews = [
-    { time: '09:30', title: `${selectedStockName} 반도체 수출 호조에 관련주 일제히 상승세`, source: '경제뉴스' },
-    { time: '10:15', title: `${selectedStockName} 외국인, 코스피 순매수 행진 지속`, source: '마켓워치' },
-    { time: '11:45', title: `${selectedStockName} AI 칩 개발 가속화 발표`, source: 'IT데일리' },
-  ]
+  const fetchNews = async (stockName) => {
+    setLoadingNews(true)
+    try {
+      const response = await fetch(`http://localhost:3000/api/news/${encodeURIComponent(stockName)}`)
+      const data = await response.json()
+      setNews(data.articles || [])
+    } catch (error) {
+      console.error('Failed to fetch news:', error)
+      setNews([])
+    }
+    setLoadingNews(false)
+  }
+
+  const displayNews = news.length > 0 ? news : []
 
   return (
     <div style={{
@@ -46,11 +58,13 @@ function RightPanel({ selectedStock, sectorStocks }) {
           뉴스 피드
         </h3>
 
-         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-           {mockNews.map((news, idx) => (
+         {loadingNews && <div style={{ fontSize: '12px', color: '#999', padding: '10px' }}>뉴스 로딩 중...</div>}
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+           {displayNews.map((article, idx) => (
              <a 
                key={idx}
-               href={`https://search.naver.com/search.naver?query=${encodeURIComponent(news.title)}`}
+               href={article.url}
                target="_blank"
                rel="noopener noreferrer"
                style={{
@@ -75,11 +89,13 @@ function RightPanel({ selectedStock, sectorStocks }) {
                }}
              >
                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                 <span style={{ fontSize: '11px', color: '#1e90ff', fontWeight: '600' }}>{news.time}</span>
-                 <span style={{ fontSize: '11px', color: '#999' }}>{news.source}</span>
+                 <span style={{ fontSize: '11px', color: '#1e90ff', fontWeight: '600' }}>
+                   {new Date(article.publishedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                 </span>
+                 <span style={{ fontSize: '11px', color: '#999' }}>{article.source}</span>
                </div>
                <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#333', fontWeight: '500' }}>
-                 {news.title}
+                 {article.title}
                </div>
              </a>
            ))}

@@ -522,7 +522,45 @@ app.listen(PORT, () => {
   console.log(`   - GET  /api/orders/history`);
   console.log(`   - GET  /api/stocks/search?name=...`);
   console.log(`   - GET  /api/stocks/limit-up?date=...`);
+  console.log(`   - GET  /api/news/:keyword`);
   console.log(`\n🎯 Ready to connect to KIS API!`);
+});
+
+app.get('/api/news/:keyword', async (req, res) => {
+  const { keyword } = req.params;
+  const NEWS_API_KEY = process.env.NEWS_API_KEY;
+  
+  if (!NEWS_API_KEY || NEWS_API_KEY === 'your_newsapi_key_here') {
+    console.warn('⚠️ NEWS_API_KEY not configured, returning empty news');
+    return res.json({ articles: [] });
+  }
+  
+  try {
+    const response = await axios.get('https://newsapi.org/v2/everything', {
+      params: {
+        q: keyword,
+        language: 'ko',
+        sortBy: 'publishedAt',
+        pageSize: 5,
+        apiKey: NEWS_API_KEY
+      }
+    });
+
+    const articles = (response.data.articles || []).map(article => ({
+      title: article.title,
+      description: article.description,
+      url: article.url,
+      source: article.source.name,
+      image: article.urlToImage,
+      publishedAt: article.publishedAt
+    }));
+
+    console.log(`✅ News fetched for "${keyword}": ${articles.length} articles`);
+    res.json({ articles });
+  } catch (error) {
+    console.error(`❌ Error fetching news for "${keyword}":`, error.message);
+    res.json({ articles: [] });
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
