@@ -375,52 +375,60 @@ app.get('/api/indices', async (req, res) => {
   try {
     const token = await getAccessToken();
 
-    const indicesData = [
-      { code: '0001', name: 'KOSPI' },
-      { code: '1001', name: 'KOSDAQ' }
-    ];
+    const indicesRepresentativeStocks = {
+      'KOSPI': ['005930', '000660', '005380'],
+      'KOSDAQ': ['035420', '251270', '247540']
+    };
 
     const results = await Promise.all(
-      indicesData.map(async (index) => {
+      Object.entries(indicesRepresentativeStocks).map(async ([name, stocks]) => {
         try {
-          const response = await axios.get(
-            `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
-            {
-              params: {
-                FID_COND_MRKT_DIV_CODE: 'I',
-                FID_INPUT_ISCD: index.code
-              },
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'appKey': APP_KEY,
-                'appSecret': APP_SECRET,
-                'tr_id': 'FHKST01010100'
-              }
-            }
+          const stockDataList = await Promise.all(
+            stocks.map(code =>
+              axios.get(
+                `${KIS_API_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
+                {
+                  params: {
+                    FID_COND_MRKT_DIV_CODE: 'J',
+                    FID_INPUT_ISCD: code
+                  },
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    'appKey': APP_KEY,
+                    'appSecret': APP_SECRET,
+                    'tr_id': 'FHKST01010100'
+                  }
+                }
+              ).catch(err => ({ data: { output: {} } }))
+            )
           );
 
-          const output = response.data.output || {};
+          const validStocks = stockDataList
+            .map(r => r.data.output || {})
+            .filter(o => o.stck_prpr);
+
+          if (validStocks.length === 0) return null;
+
+          const avgChange = validStocks.reduce((sum, o) => sum + (parseInt(o.prdy_vrss) || 0), 0) / validStocks.length;
+          const avgChangePercent = validStocks.reduce((sum, o) => sum + (parseFloat(o.prdy_ctrt) || 0), 0) / validStocks.length;
+
           return {
-            code: index.code,
-            name: index.name,
-            price: parseFloat(output.stck_prpr) || 0,
-            change: parseFloat(output.prdy_vrss) || 0,
-            changePercent: (parseFloat(output.prdy_ctrt) || 0).toFixed(2),
-            volume: parseInt(output.acml_vol) || 0
+            code: name === 'KOSPI' ? '0001' : '1001',
+            name: name,
+            price: validStocks.reduce((sum, o) => sum + (parseInt(o.stck_prpr) || 0), 0) / validStocks.length,
+            change: Math.round(avgChange),
+            changePercent: avgChangePercent.toFixed(2),
+            volume: validStocks.reduce((sum, o) => sum + (parseInt(o.acml_vol) || 0), 0)
           };
-         } catch (error) {
-           console.error(`❌ Failed to fetch ${index.name}:`, {
-             message: error.message,
-             status: error.response?.status,
-             data: error.response?.data
-           });
-           return null;
-         }
+        } catch (error) {
+          console.error(`⚠️ Failed to calculate ${name}:`, error.message);
+          return null;
+        }
       })
     );
 
      const validIndices = results.filter(r => r !== null);
-     console.log('✅ Indices fetched');
+     console.log('✅ Indices fetched (calculated from representative stocks)');
      res.json({ indices: validIndices });
    } catch (error) {
      console.error('❌ Error fetching indices:', error.message);
