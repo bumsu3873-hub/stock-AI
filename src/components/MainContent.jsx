@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react'
 import StockChart from './StockChart'
-import OrderModal from './OrderModal'
-import { TrendingUp, TrendingDown, Activity, BarChart2, DollarSign, Clock } from 'lucide-react'
+import { TrendingUp, TrendingDown, Activity, BarChart2 } from 'lucide-react'
 
 function MainContent({ selectedStock, sectorStocks }) {
   const [stockData, setStockData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [showOrderModal, setShowOrderModal] = useState(false)
-  const [orderType, setOrderType] = useState('buy')
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -37,8 +34,6 @@ function MainContent({ selectedStock, sectorStocks }) {
     }
 
     fetchStockData()
-    const interval = setInterval(fetchStockData, 3000)
-    return () => clearInterval(interval)
   }, [selectedStock])
 
   if (loading || !stockData) {
@@ -165,48 +160,7 @@ function MainContent({ selectedStock, sectorStocks }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              onClick={() => {
-                setOrderType('buy')
-                setShowOrderModal(true)
-              }}
-              style={{
-                padding: '12px 30px',
-                background: '#ff4757',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '15px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(255, 71, 87, 0.3)'
-              }}
-            >
-              매수하기
-            </button>
-            <button
-              onClick={() => {
-                setOrderType('sell')
-                setShowOrderModal(true)
-              }}
-              style={{
-                padding: '12px 30px',
-                background: '#1e90ff',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '15px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(30, 144, 255, 0.3)'
-              }}
-            >
-              매도하기
-            </button>
-          </div>
+
         </div>
 
         <div style={{
@@ -335,17 +289,7 @@ function MainContent({ selectedStock, sectorStocks }) {
         </div>
       </div>
 
-      {showOrderModal && (
-        <OrderModal
-          stock={stockData}
-          orderType={orderType}
-          onClose={() => setShowOrderModal(false)}
-          onSuccess={() => {
-            setShowOrderModal(false)
-            alert(`${orderType === 'buy' ? '매수' : '매도'} 주문이 완료되었습니다!`)
-          }}
-        />
-      )}
+
     </div>
   )
 }
