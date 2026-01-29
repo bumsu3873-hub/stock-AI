@@ -1,66 +1,7 @@
 import express from 'express';
 import kiwoomService from '../services/kiwoom-service.js';
-import portfolioService from '../services/portfolio-service.js';
 
 const router = express.Router();
-
-router.get('/portfolio', (req, res) => {
-  try {
-    const portfolio = portfolioService.getPortfolio();
-    res.json(portfolio);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/balance', (req, res) => {
-  try {
-    const balance = portfolioService.getBalance();
-    res.json(balance);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/holdings', (req, res) => {
-  try {
-    const holdings = portfolioService.getHoldings();
-    res.json(holdings);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.post('/orders', (req, res) => {
-  try {
-    const { code, name, quantity, price, orderType } = req.body;
-    
-    if (!code || !quantity || !price || !orderType) {
-      return res.status(400).json({ error: '필수 필드 누락 (code, quantity, price, orderType)' });
-    }
-
-    const order = portfolioService.addOrder({
-      code,
-      name,
-      quantity: parseInt(quantity),
-      price: parseInt(price),
-      orderType: orderType.toUpperCase(),
-    });
-
-    res.json(order);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-router.get('/transactions', (req, res) => {
-  try {
-    const transactions = portfolioService.getTransactionHistory();
-    res.json(transactions);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 router.get('/stocks/limit-up', async (req, res) => {
   const date = req.query.date;
