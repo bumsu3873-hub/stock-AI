@@ -372,84 +372,12 @@ const MOCK_LIMIT_UP_DATA = {
 };
 
 app.get('/api/indices', async (req, res) => {
-  try {
-    const response = await axios.get(
-      'https://query.naver.com/svc/chartnews/get',
-      {
-        params: {
-          q: '코스피',
-          start: 0,
-          size: 1
-        },
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      }
-    );
-
-    const kospiMatch = await axios.get(
-      'https://api.stock.naver.com/index/KOSPI/price',
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0'
-        }
-      }
-    ).catch(() => null);
-
-    const kosdaqMatch = await axios.get(
-      'https://api.stock.naver.com/index/KOSDAQ/price',
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0'
-        }
-      }
-    ).catch(() => null);
-
-    const indices = [];
-
-    if (kospiMatch?.data) {
-      indices.push({
-        code: '0001',
-        name: 'KOSPI',
-        price: kospiMatch.data.tradePrice || 0,
-        change: kospiMatch.data.change || 0,
-        changePercent: (kospiMatch.data.changePercent || 0).toFixed(2),
-        volume: 0
-      });
-    }
-
-    if (kosdaqMatch?.data) {
-      indices.push({
-        code: '1001',
-        name: 'KOSDAQ',
-        price: kosdaqMatch.data.tradePrice || 0,
-        change: kosdaqMatch.data.change || 0,
-        changePercent: (kosdaqMatch.data.changePercent || 0).toFixed(2),
-        volume: 0
-      });
-    }
-
-    if (indices.length === 0) {
-      console.warn('⚠️ Failed to fetch from Naver API, using mock data');
-      return res.json({
-        indices: [
-          { code: '0001', name: 'KOSPI', price: 5221.25, change: 50.44, changePercent: '0.98', volume: 0 },
-          { code: '1001', name: 'KOSDAQ', price: 726.45, change: 12.35, changePercent: '1.73', volume: 0 }
-        ]
-      });
-    }
-
-    console.log('✅ Indices fetched:', indices);
-    res.json({ indices });
-  } catch (error) {
-    console.error('❌ Error fetching indices:', error.message);
-    res.json({
-      indices: [
-        { code: '0001', name: 'KOSPI', price: 5221.25, change: 50.44, changePercent: '0.98', volume: 0 },
-        { code: '1001', name: 'KOSDAQ', price: 726.45, change: 12.35, changePercent: '1.73', volume: 0 }
-      ]
-    });
-  }
+  res.json({
+    indices: [
+      { code: '0001', name: 'KOSPI', price: 5221.25, change: 50.44, changePercent: '0.98', volume: 0 },
+      { code: '1001', name: 'KOSDAQ', price: 726.45, change: 12.35, changePercent: '1.73', volume: 0 }
+    ]
+  });
 });
 
 app.get('/api/sectors/:sector', async (req, res) => {
